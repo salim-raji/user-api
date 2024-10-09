@@ -39,7 +39,7 @@ app.post('/post', (req, res) => {
 app.delete('/delete/:id' , (req, res)=> {
     if(ObjectId.isValid(req.params.id)){
         db.collection('users')
-        .deleteOne({_id: new ObjectId(req.params.id)})
+        .deleteOne({_id: ObjectId(req.params.id)})
         .then((result)=>{
             res.status(200).json(result)
         })
@@ -50,7 +50,7 @@ app.patch('/update/:id', (req,res) => {
     const updates = req.body
     if(ObjectId.isValid(req.params.id)){
         db.collection('users')
-        .updateOne({_id: new ObjectId(req.params.id)}, {$set: updates})
+        .updateOne({_id: ObjectId(req.params.id)}, {$set: updates})
         .then((result)=>{
             res.status(200).json(result)
         })
