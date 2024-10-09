@@ -3,6 +3,10 @@ const app = express();
 const cors = require('cors');
 const {connectToDb, getDb} = require('./db')
 const { ObjectId } = require('mongodb')
+const multer = require('multer')
+const path = require('path')
+const fs = require("fs")
+
 
 app.use(express.json());
 app.use(cors());
@@ -18,6 +22,18 @@ connectToDb((err) => {
     }
 })
 
+const storage = multer.diskStorage({
+    destination: function(req, file, cb){
+        cb(null, path.join(__dirname, "images"))
+    },
+    filename: function(req, file, cb){
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+})
+
+const upload = multer({storage: storage});
+
+
 app.get('/users', (req, res) => {
     let users = []
     db.collection('users')
@@ -27,7 +43,7 @@ app.get('/users', (req, res) => {
     .catch(() => {res.status(500).json({error: 'Could not fetch'})});
 })
 
-app.post('/post', (req, res) => {
+app.post('/post', upload.single('image'), (req, res) => {
     const newUser = req.body
     db.collection('users')
     .insertOne(newUser)
