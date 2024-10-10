@@ -35,55 +35,31 @@ app.get('/users', (req, res) => {
     .catch(() => {res.status(500).json({error: 'Could not fetch'})});
 })
 
-app.post('/post', (req, res) => {
-    const newUser = req.body
+app.post('/post', async (req, res) => {
+    const newUser = req.body;
 
-    if(newUser.imageUrl){
-        const base64Data = newUser.imageUrl.replace(/^data:image\/png;base64,/,"")
-        const filePath = path.join(__dirname, 'uploads', `${Date.now()}.png`);
+    try {
+        if (newUser.imageUrl) {
+            const base64Data = newUser.imageUrl.replace(/^data:image\/png;base64,/, "");
+            const filePath = path.join(__dirname, 'uploads', `${Date.now()}.png`);
 
 
-        sharp(Buffer.from(base64Data, 'base64'))
-        .resize(400, 400) 
-        .png() 
-        .toFile(filePath)
-        .then(() => {
+            await sharp(Buffer.from(base64Data, 'base64'))
+                .resize(400, 400)
+                .png()
+                .toFile(filePath);
+
             newUser.imagePath = filePath;
-            return db.collection('users').insertOne(newUser);
-        })
-        .then((result) => {
-            res.status(201).json(result);
-        })
-        .catch(err => {
-            console.error('Error processing image:', err);
-            res.status(500).json({ error: 'Error processing image' });
-        })
+        }
 
-        // fs.writeFile(filePath, base64Data, 'base64', (err) => {
-        //     if (err){
-        //         return res.status(500).json({error: 'Error saving image'});
-        //     }
-
-        //     newUser.imagePath = filePath;
-        //     db.collection('users')
-        //     .insertOne(newUser)
-        //     .then((result) => {
-        //         res.status(201).json(result)
-        //     });
-
-        // })
-    }else{
-        db.collection('users')
-        .insertOne(newUser)
-        .then((result) => {
-            res.status(201).json(result)
-        })
+        const result = await db.collection('users').insertOne(newUser);
+        res.status(201).json(result);
+    } catch (err) {
+        console.error('Error processing request:', err);
+        res.status(500).json({ error: 'Error processing request' });
     }
-
-
-
-
 });
+
 
 app.delete('/delete/:id' , (req, res)=> {
     if(ObjectId.isValid(req.params.id)){
