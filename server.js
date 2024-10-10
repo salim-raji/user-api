@@ -35,29 +35,53 @@ app.get('/users', (req, res) => {
     .catch(() => {res.status(500).json({error: 'Could not fetch'})});
 })
 
+const sharp = require('sharp');
+const path = require('path');
+const fs = require('fs');
+
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+}
+
 app.post('/post', async (req, res) => {
     const newUser = req.body;
 
     try {
         if (newUser.imageUrl) {
-   
+            console.log('Base64 Image Data:', newUser.imageUrl); 
+
             const match = newUser.imageUrl.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
             if (!match) {
                 return res.status(400).json({ error: 'Invalid image format' });
             }
 
             const base64Data = match[2];
-            const filePath = path.join(__dirname, 'uploads', `${Date.now()}.png`);
+            const filePath = path.join(uploadsDir, `${Date.now()}.png`);
+
+            try {
+                await sharp(Buffer.from(base64Data, 'base64'))
+                    .resize(400, 400)
+                    .toFormat('png')
+                    .toFile(filePath);
+                console.log('Image processed and saved to:', filePath);
+                
+
+                if (!fs.existsSync(filePath)) {
+                    return res.status(500).json({ error: 'Image not saved' });
+                }
 
 
-            await sharp(Buffer.from(base64Data, 'base64'))
-                .resize(400, 400) 
-                .toFormat('png') 
-                .toFile(filePath);
-
-            newUser.imagePath = filePath;
+                const metadata = await sharp(filePath).metadata();
+                console.log('Image Metadata:', metadata);
+                
+ 
+                newUser.imagePath = `/uploads/${path.basename(filePath)}`;
+            } catch (error) {
+                console.error('Error during image processing:', error);
+                return res.status(500).json({ error: 'Image processing failed' });
+            }
         }
-
 
         const result = await db.collection('users').insertOne(newUser);
         res.status(201).json(result);
