@@ -40,19 +40,19 @@ app.post('/post', async (req, res) => {
 
     try {
         if (newUser.imageUrl) {
-
+   
             const match = newUser.imageUrl.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
             if (!match) {
                 return res.status(400).json({ error: 'Invalid image format' });
             }
-            const format = match[1];
+
             const base64Data = match[2];
             const filePath = path.join(__dirname, 'uploads', `${Date.now()}.png`);
 
 
             await sharp(Buffer.from(base64Data, 'base64'))
-                .toFormat('png') 
                 .resize(400, 400) 
+                .toFormat('png') 
                 .toFile(filePath);
 
             newUser.imagePath = filePath;
@@ -66,6 +66,7 @@ app.post('/post', async (req, res) => {
         res.status(500).json({ error: 'Error processing request' });
     }
 });
+
 
 
 
