@@ -1,7 +1,7 @@
 const {MongoClient} = require("mongodb");
 
 let dbConnection;
-const uri = 'mongodb://localhost:27017/myDatabase'
+const uri = 'mongodb+srv://salimraji:1234@mycluster.lbrtq.mongodb.net/sample_mflix?retryWrites=true&w=majority&appName=myCluster'
 module.exports={
     connectToDb: (cb) => {
         MongoClient.connect(uri)
