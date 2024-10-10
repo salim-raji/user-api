@@ -40,17 +40,24 @@ app.post('/post', async (req, res) => {
 
     try {
         if (newUser.imageUrl) {
-            const base64Data = newUser.imageUrl.replace(/^data:image\/png;base64,/, "");
+
+            const match = newUser.imageUrl.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
+            if (!match) {
+                return res.status(400).json({ error: 'Invalid image format' });
+            }
+            const format = match[1];
+            const base64Data = match[2];
             const filePath = path.join(__dirname, 'uploads', `${Date.now()}.png`);
 
 
             await sharp(Buffer.from(base64Data, 'base64'))
-                .resize(400, 400)
-                .png()
+                .toFormat('png') 
+                .resize(400, 400) 
                 .toFile(filePath);
 
             newUser.imagePath = filePath;
         }
+
 
         const result = await db.collection('users').insertOne(newUser);
         res.status(201).json(result);
@@ -59,6 +66,7 @@ app.post('/post', async (req, res) => {
         res.status(500).json({ error: 'Error processing request' });
     }
 });
+
 
 
 app.delete('/delete/:id' , (req, res)=> {
