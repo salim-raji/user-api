@@ -5,11 +5,7 @@ const {connectToDb, getDb} = require('./db')
 const { ObjectId } = require('mongodb')
 const path = require("path")
 const sharp = require('sharp');
-
 const fs = require('fs');
-
-
-const fs = require("fs")
 
 
 app.use(express.json());
