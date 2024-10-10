@@ -3,8 +3,8 @@ const app = express();
 const cors = require('cors');
 const {connectToDb, getDb} = require('./db')
 const { ObjectId } = require('mongodb')
-const multer = require('multer')
-const path = require('path')
+const path = require("path")
+
 const fs = require("fs")
 
 
@@ -22,16 +22,7 @@ connectToDb((err) => {
     }
 })
 
-const storage = multer.diskStorage({
-    destination: function(req, file, cb){
-        cb(null, path.join(__dirname, "images"))
-    },
-    filename: function(req, file, cb){
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-})
 
-const upload = multer({storage: storage});
 
 
 app.get('/users', (req, res) => {
@@ -43,14 +34,38 @@ app.get('/users', (req, res) => {
     .catch(() => {res.status(500).json({error: 'Could not fetch'})});
 })
 
-app.post('/post', upload.single('image'), (req, res) => {
+app.post('/post', (req, res) => {
     const newUser = req.body
-    db.collection('users')
-    .insertOne(newUser)
-    .then((result) => {
-        res.status(201).json(result)
-    })
-})
+
+    if(newUser.imageUrl){
+        const base64Data = newUser.imageUrl.replace(/^data:image\/png;base64,/,"")
+        const filePath = path.join(__dirname, 'uploads', `${Date.now()}.png`);
+
+        fs.writeFile(filePath, base64Data, 'base64', (err) => {
+            if (err){
+                return res.status(500).json({error: 'Error saving image'});
+            }
+
+            newUser.imagePath = filePath;
+            db.collection('users')
+            .insertOne(newUser)
+            .then((result) => {
+                res.status(201).json(result)
+            });
+
+        })
+    }else{
+        db.collection('users')
+        .insertOne(newUser)
+        .then((result) => {
+            res.status(201).json(result)
+        })
+    }
+
+
+
+
+});
 
 app.delete('/delete/:id' , (req, res)=> {
     if(ObjectId.isValid(req.params.id)){
