@@ -73,7 +73,7 @@ app.post('/post', async (req, res) => {
                 console.log('Image Metadata:', metadata);
                 
  
-                newUser.imagePath = `/uploads/${path.basename(filePath)}`;
+                newUser.imageUrl = `/uploads/${path.basename(filePath)}`;
             } catch (error) {
                 console.error('Error during image processing:', error);
                 return res.status(500).json({ error: 'Image processing failed' });
