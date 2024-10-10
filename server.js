@@ -4,7 +4,10 @@ const cors = require('cors');
 const {connectToDb, getDb} = require('./db')
 const { ObjectId } = require('mongodb')
 const path = require("path")
-const sharp = require("sharp")
+const sharp = require('sharp');
+
+const fs = require('fs');
+
 
 const fs = require("fs")
 
@@ -35,9 +38,7 @@ app.get('/users', (req, res) => {
     .catch(() => {res.status(500).json({error: 'Could not fetch'})});
 })
 
-const sharp = require('sharp');
-const path = require('path');
-const fs = require('fs');
+
 
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
