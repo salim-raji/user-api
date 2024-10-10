@@ -45,7 +45,7 @@ app.post('/post', (req, res) => {
 
         sharp(Buffer.from(base64Data, 'base64'))
         .resize(400, 400) 
-        .toFormat('png') 
+        .png() 
         .toFile(filePath)
         .then(() => {
             newUser.imagePath = filePath;
