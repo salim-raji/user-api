@@ -4,6 +4,7 @@ const cors = require('cors');
 const {connectToDb, getDb} = require('./db')
 const { ObjectId } = require('mongodb')
 const path = require("path")
+const sharp = require("sharp")
 
 const fs = require("fs")
 
@@ -41,19 +42,36 @@ app.post('/post', (req, res) => {
         const base64Data = newUser.imageUrl.replace(/^data:image\/png;base64,/,"")
         const filePath = path.join(__dirname, 'uploads', `${Date.now()}.png`);
 
-        fs.writeFile(filePath, base64Data, 'base64', (err) => {
-            if (err){
-                return res.status(500).json({error: 'Error saving image'});
-            }
 
+        sharp(Buffer.from(base64Data, 'base64'))
+        .resize(400, 400) 
+        .toFormat('png') 
+        .toFile(filePath)
+        .then(() => {
             newUser.imagePath = filePath;
-            db.collection('users')
-            .insertOne(newUser)
-            .then((result) => {
-                res.status(201).json(result)
-            });
-
+            return db.collection('users').insertOne(newUser);
         })
+        .then((result) => {
+            res.status(201).json(result);
+        })
+        .catch(err => {
+            console.error('Error processing image:', err);
+            res.status(500).json({ error: 'Error processing image' });
+        })
+
+        // fs.writeFile(filePath, base64Data, 'base64', (err) => {
+        //     if (err){
+        //         return res.status(500).json({error: 'Error saving image'});
+        //     }
+
+        //     newUser.imagePath = filePath;
+        //     db.collection('users')
+        //     .insertOne(newUser)
+        //     .then((result) => {
+        //         res.status(201).json(result)
+        //     });
+
+        // })
     }else{
         db.collection('users')
         .insertOne(newUser)
