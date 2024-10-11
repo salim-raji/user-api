@@ -98,14 +98,53 @@ app.delete('/delete/:id' , (req, res)=> {
     }
 })
 
-app.patch('/update/:id', (req,res) => {
-    const updates = req.body
-    if(ObjectId.isValid(req.params.id)){
-        db.collection('users')
-        .updateOne({_id: new ObjectId(req.params.id)}, {$set: updates})
-        .then((result)=>{
-            res.status(200).json(result)
-        })
-    }
+app.patch('/update/:id', async (req, res) => {
+    const updates = req.body;
 
-})
+    if (ObjectId.isValid(req.params.id)) {
+        try {
+            if (updates.imageUrl) {
+                console.log('Base64 Image Data:', updates.imageUrl);
+
+                const match = updates.imageUrl.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
+                if (!match) {
+                    return res.status(400).json({ error: 'Invalid image format' });
+                }
+
+                const base64Data = match[2];
+                const fileName = `${Date.now()}.png`;
+                const filePath = path.join(__dirname, 'uploads', fileName);
+                console.log(__dirname);
+
+                try {
+                    await sharp(Buffer.from(base64Data, 'base64'))
+                        .resize(400, 400)
+                        .toFile(filePath);
+
+                    if (!fs.existsSync(filePath)) {
+                        return res.status(500).json({ error: 'Image not saved' });
+                    }
+                    const publicUrl = `${req.protocol}://${req.get('host')}/uploads/${fileName}`;
+                    updates.imageUrl = publicUrl;
+                } catch (error) {
+                    console.error('Error during image processing:', error);
+                    return res.status(500).json({ error: 'Image processing failed' });
+                }
+            }
+
+            const result = await db.collection('users')
+                .updateOne({ _id: new ObjectId(req.params.id) }, { $set: updates });
+
+            if (result.matchedCount === 0) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+
+            res.status(200).json(result);
+        } catch (err) {
+            console.error('Error processing request:', err);
+            res.status(500).json({ error: 'Error processing request' });
+        }
+    } else {
+        res.status(400).json({ error: 'Invalid ID format' });
+    }
+});
