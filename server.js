@@ -41,6 +41,7 @@ app.get('/users', (req, res) => {
 
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.json({ limit: '10mb' }))
 
 app.post('/post', async (req, res) => {
     const newUser = req.body;
