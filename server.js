@@ -41,7 +41,6 @@ app.get('/users', (req, res) => {
 
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-app.use(express.json({ limit: '10mb' }))
 
 app.post('/post', async (req, res) => {
     const newUser = req.body;
@@ -50,7 +49,7 @@ app.post('/post', async (req, res) => {
         if (newUser.imageUrl) {
             console.log('Base64 Image Data:', newUser.imageUrl); 
 
-            const match = updates.imageUrl.match(/^data:image\/.+;base64,(.+)$/);
+            const match = newUser.imageUrl.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
             if (!match) {
                 return res.status(400).json({ error: 'Invalid image format' });
             }
@@ -107,7 +106,7 @@ app.patch('/update/:id', async (req, res) => {
             if (updates.imageUrl) {
                 console.log('Base64 Image Data:', updates.imageUrl);
 
-                const match = updates.imageUrl.match(/^data:image\/.+;base64,(.+)$/);
+                const match = updates.imageUrl.match(/^data:image\/(png|jpeg|jpg|gif|bmp);base64,(.+)$/);
                 if (!match) {
                     return res.status(400).json({ error: 'Invalid image format' });
                 }
