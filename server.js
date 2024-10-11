@@ -11,6 +11,9 @@ const fs = require('fs');
 app.use(express.json());
 app.use(cors());
 
+
+
+
 let db
 
 connectToDb((err) => {
@@ -36,10 +39,8 @@ app.get('/users', (req, res) => {
 
 
 
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
-}
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.post('/post', async (req, res) => {
     const newUser = req.body;
@@ -54,37 +55,20 @@ app.post('/post', async (req, res) => {
             }
 
             const base64Data = match[2];
-            const filePath = path.join(uploadsDir, `${Date.now()}.png`);
+            const fileName = `${Date.now()}.png`;
+            const filePath = path.join(__dirname, 'uploads', fileName);
+            console.log(__dirname)
 
             try {
                 await sharp(Buffer.from(base64Data, 'base64'))
                     .resize(400, 400)
-                    .toFormat('png')
-                    .then(()=>{
-                        fs.writeFile(filePath, base64Data, 'base64', (err) => {
-                            if (err){
-                            return res.status(500).json({error: 'Error saving image'});
-                        }})
-                    })
                     .toFile(filePath);
-                console.log('Image processed and saved to:', filePath);
                 
-
                 if (!fs.existsSync(filePath)) {
                     return res.status(500).json({ error: 'Image not saved' });
                 }
-
-
-                const metadata = await sharp(filePath).metadata();
-                console.log('Image Metadata:', metadata);
-
-                        // fs.writeFile(filePath, base64Data, 'base64', (err) => {
-        //     if (err){
-        //         return res.status(500).json({error: 'Error saving image'});
-        //     }
-                
- 
-                newUser.imageUrl = filePath;
+                const publicUrl = `${req.protocol}://${req.get('host')}/uploads/${fileName}`;
+                newUser.imageUrl = publicUrl;
             } catch (error) {
                 console.error('Error during image processing:', error);
                 return res.status(500).json({ error: 'Image processing failed' });
@@ -98,6 +82,8 @@ app.post('/post', async (req, res) => {
         res.status(500).json({ error: 'Error processing request' });
     }
 });
+
+
 
 
 
