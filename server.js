@@ -60,6 +60,12 @@ app.post('/post', async (req, res) => {
                 await sharp(Buffer.from(base64Data, 'base64'))
                     .resize(400, 400)
                     .toFormat('png')
+                    .then(()=>{
+                        fs.writeFile(filePath, base64Data, 'base64', (err) => {
+                            if (err){
+                            return res.status(500).json({error: 'Error saving image'});
+                        }})
+                    })
                     .toFile(filePath);
                 console.log('Image processed and saved to:', filePath);
                 
@@ -71,6 +77,11 @@ app.post('/post', async (req, res) => {
 
                 const metadata = await sharp(filePath).metadata();
                 console.log('Image Metadata:', metadata);
+
+                        // fs.writeFile(filePath, base64Data, 'base64', (err) => {
+        //     if (err){
+        //         return res.status(500).json({error: 'Error saving image'});
+        //     }
                 
  
                 newUser.imageUrl = filePath;
