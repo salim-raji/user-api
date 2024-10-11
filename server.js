@@ -49,7 +49,7 @@ app.post('/post', async (req, res) => {
         if (newUser.imageUrl) {
             console.log('Base64 Image Data:', newUser.imageUrl); 
 
-            const match = newUser.imageUrl.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
+            const match = updates.imageUrl.match(/^data:image\/.+;base64,(.+)$/);
             if (!match) {
                 return res.status(400).json({ error: 'Invalid image format' });
             }
@@ -106,7 +106,7 @@ app.patch('/update/:id', async (req, res) => {
             if (updates.imageUrl) {
                 console.log('Base64 Image Data:', updates.imageUrl);
 
-                const match = updates.imageUrl.match(/^data:image\/(png|jpeg|jpg|gif);base64,(.+)$/);
+                const match = updates.imageUrl.match(/^data:image\/.+;base64,(.+)$/);
                 if (!match) {
                     return res.status(400).json({ error: 'Invalid image format' });
                 }
